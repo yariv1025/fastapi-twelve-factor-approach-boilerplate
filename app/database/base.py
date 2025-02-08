@@ -13,6 +13,10 @@ class BaseRepository(ABC):
         pass
 
     @abstractmethod
+    async def get_by_email(self, email: Any) -> Optional[Any]:
+        pass
+
+    @abstractmethod
     async def get_all(self) -> List[Any]:
         pass
 

@@ -1,23 +1,29 @@
-from sqlalchemy.orm import Session
-from app.database.models.user import User
-from app.schemas.user import UserCreate
+from typing import Any
+from pydantic import EmailStr
 
-class UserRepository:
-    def __init__(self, session: Session):
-        self.session = session
+from app.database.base import BaseRepository
 
-    async def create(self, user_data: dict):
-        """Create a new user and store it in the database."""
-        new_user = User(**user_data)
-        self.session.add(new_user)
-        self.session.commit()
-        self.session.refresh(new_user)
-        return new_user
 
-    async def get_by_email(self, email: str):
-        """Retrieve a user by email."""
-        return self.session.query(User).filter(User.email == email).first()
+class UserRepository(BaseRepository):
+    """User-specific repository that wraps a database-agnostic repository"""
 
-    async def get_by_id(self, user_id: int):
-        """Retrieve a user by ID."""
-        return self.session.query(User).filter(User.id == user_id).first()
+    def __init__(self, db_repo: BaseRepository):
+        self.db_repo = db_repo
+
+    async def create(self, data: dict):
+        return await self.db_repo.create(data)
+
+    async def get_by_id(self, id: Any):
+        return await self.db_repo.get_by_id(id)
+
+    async def get_by_email(self, email: EmailStr):
+        return await self.db_repo.get_by_email(email)
+
+    async def get_all(self):
+        return await self.db_repo.get_all()
+
+    async def update(self, id: Any, data: dict):
+        return await self.db_repo.update(id, data)
+
+    async def delete(self, id: Any):
+        return await self.db_repo.delete(id)

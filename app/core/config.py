@@ -4,32 +4,35 @@ from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "FastAPI Twelve-Factor Boilerplate"
-    VERSION: str = "0.1.0"
-    ENVIRONMENT: str = "development" # TODO: move to .env
-    DEBUG: bool = True # TODO: move to .env
+    PROJECT_NAME: str = os.getenv("PROJECT_NAME")
+    VERSION: str = os.getenv("VERSION")
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT")
+    DEBUG: bool = os.getenv("DEBUG")
     ENTRYPOINT: str = "main:app"
 
     # Server settings
-    HOST: str = "0.0.0.0"
-    PORT: int = 8000
+    HOST: str = os.getenv("HOST")
+    PORT: int = os.getenv("PORT")
 
     # Database settings
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:mysecretpassword@localhost:5432/mydatabase" # TODO: move to .env
-    MONGODB_URL: str = "mongodb://root:example@localhost:27017/" # TODO: move to .env
-    MONGO_DB_NAME: str ="test"
+    DB_TYPE: str = os.getenv("DB_TYPE", "postgresql")  # Default to PostgreSQL if not set
+
+    POSTGRES_URL: str = os.getenv("POSTGRES_URL")
+    MONGODB_URL: str = os.getenv("MONGODB_URL")
+    MONGO_DB_NAME: str = os.getenv("MONGO_DB_NAME")
 
     # Redis
-    REDIS_URL: str = "redis://localhost:6379/0" # TODO: move to .env + add redis
+    REDIS_URL: str = os.getenv("REDIS_URL")
 
     # RabbitMQ
-    RABBITMQ_URL: str = "amqp://user:password@localhost:5672/" # TODO: move to .env
+    RABBITMQ_URL: str = os.getenv("RABBITMQ_URL")
 
-    #Auth
-    SECRET_KEY: str = "40fe47dd7563234bf9a66817fef6d45847962074899cf35a8e0412727d9e982a" # TODO: move to .env
-    ALGORITHM: str = "HS256" # TODO: move to .env
-    ACCESS_TOKEN_EXPIRE_MINUTES: str = "30" # TODO: move to .env
+    # Auth
+    SECRET_KEY: str = os.getenv("SECRET_KEY")
+    ALGORITHM: str = os.getenv("ALGORITHM")
+    ACCESS_TOKEN_EXPIRE_MINUTES: str = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
 
+    # OAuth
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET")
     GITHUB_CLIENT_ID: str = os.getenv("GITHUB_CLIENT_ID")

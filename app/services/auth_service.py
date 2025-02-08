@@ -1,11 +1,8 @@
-from datetime import timedelta
-from fastapi import Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from app.core.auth import verify_password, get_password_hash, create_access_token
-from app.database.repositories.user_repository import UserRepository
-from app.database.session import get_pg_session
+from fastapi import HTTPException
 from app.schemas.user import UserCreate, UserLogin
-from app.database.models.user import UserRole
+from app.database.repositories.user_repository import UserRepository
+from app.core.auth import verify_password, get_password_hash, create_access_token
+
 
 class AuthService:
     def __init__(self, user_repository: UserRepository):
@@ -26,17 +23,13 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
         # access_token = create_access_token({"sub": user.email}, timedelta(minutes=30))
-        access_token = create_access_token({"sub": user.email, "role": user.role.value})  # Add role in JWT
+        access_token = create_access_token({"sub": user.email, "role": user.role.value})
         return {"access_token": access_token, "token_type": "bearer"}
-
-# Dependency for authentication
-async def get_auth_service(session: Session = Depends(get_pg_session)):
-    return AuthService(UserRepository(session))
 
 
 async def oauth_login(self, user_info: dict, provider: str):
     """Handles OAuth2 user login."""
-    email = user_info["email"]
+    email = user_info.get("email")
     user = await self.user_repository.get_by_email(email)
 
     if not user:

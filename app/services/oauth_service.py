@@ -4,7 +4,7 @@ from starlette.responses import RedirectResponse
 from app.core.config import settings
 from app.services.auth_service import AuthService
 from app.database.repositories.user_repository import UserRepository
-from app.database.session import get_pg_session
+from app.database.db_instance import get_pg_session
 
 oauth = OAuth()
 

@@ -1,40 +1,55 @@
 from fastapi import APIRouter, Depends
-from app.services.user_service import UserService
-from app.database.session import get_pg_session, get_mongo_db
-from app.database.repositories.postgres_repository import PostgresRepository
-from app.database.repositories.mongo_repository import MongoRepository
-from app.database.models.user import User
-from pydantic import BaseModel
-from app.core.dependencies import get_current_user
+
+from app.schemas.user import UserCreate
 from app.database.models.user import UserRole
-from app.core.dependencies import require_role
+from app.services.user_service import UserService
+from app.core.dependencies import get_current_user
+from app.core.dependencies import require_role, get_user_service
 
 router = APIRouter()
 
-# Dependency Injection: Choose PostgreSQL or MongoDB dynamically
-async def get_user_service(db_type: str = "postgres", session=Depends(get_pg_session), db=Depends(get_mongo_db)):
-    if db_type == "postgres":
-        return UserService(PostgresRepository(session, User))
-    else:
-        return UserService(MongoRepository(db, "users"))
-
-# Pydantic schema
-class UserCreate(BaseModel):
-    username: str
-    email: str
 
 @router.post("/", tags=["Users"])
 async def create_user(user: UserCreate, service: UserService = Depends(get_user_service)):
-    return await service.create(user.dict())
+    """
+    Endpoint to create a new user.
+
+    :param user: User data to create the new user, which is validated using the UserCreate schema.
+    :param service: The UserService used to handle business logic for user creation. It is injected as a dependency.
+    :return: Returns a response containing the created user data.
+    """
+    return await service.create(user.model_dump())
+
 
 @router.get("/{user_id}", tags=["Users"])
 async def get_user(user_id: str, service: UserService = Depends(get_user_service)):
+    """
+    Endpoint to fetch a user by their unique user_id.
+
+    :param user_id: The unique ID of the user to fetch.
+    :param service: The UserService used to handle business logic for interacting with the database and retrieve the user.
+    :return: Returns the user data corresponding to the provided user_id.
+    """
     return await service.get_by_id(user_id)
+
 
 @router.get("/me")
 async def get_current_user_info(user: dict = Depends(get_current_user)):
+    """
+    Endpoint to fetch the current authenticated user's info.
+
+    :param user: The currently authenticated user, extracted from the JWT token.
+    :return: Returns the email of the authenticated user.
+    """
     return {"email": user["sub"]}
+
 
 @router.get("/admin-only")
 async def admin_dashboard(user: dict = Depends(require_role(UserRole.ADMIN))):
+    """
+    Endpoint to access an admin-only dashboard.
+
+    :param user: The current user, which validated to have an ADMIN role using the require_role dependency.
+    :return: Returns a welcome message for the admin user.
+    """
     return {"message": "Welcome, Admin!", "user": user}

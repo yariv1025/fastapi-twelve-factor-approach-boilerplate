@@ -18,6 +18,10 @@ class MongoRepository(BaseRepository):
         result = await self.collection.find_one({"_id": ObjectId(id)})
         return result if result else None
 
+    async def get_by_email(self, email: str) -> Optional[Any]:
+        result = await self.collection.find_one({"email": email})
+        return result if result else None
+
     async def get_all(self) -> List[Any]:
         return await self.collection.find().to_list(None)
 
