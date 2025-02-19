@@ -1,36 +1,39 @@
 import redis.asyncio as redis
+
+from typing import Union
+from pymongo import MongoClient
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 from motor.motor_asyncio import AsyncIOMotorDatabase
+
 from app.core.config import settings
+
 
 class HealthService:
     """Service for checking system health, including databases and cache services."""
 
-    @staticmethod
-    async def check_postgres(session: AsyncSession) -> bool:
-        """Check if PostgreSQL database is available."""
+    def __init__(self, db: Union[AsyncSession, AsyncIOMotorDatabase, Redis]):
+        self.db = db
+
+    async def check_postgres(self):
         try:
-            await session.execute("SELECT 1")
+            await self.db.execute("SELECT *")
             return True
-        except Exception:
+        except Exception as e:
             return False
 
-    @staticmethod
-    async def check_mongo(mongo_db: AsyncIOMotorDatabase) -> bool:
-        """Check if MongoDB database is available."""
+    async def check_mongo(self):
         try:
-            await mongo_db.command("ping")
+            client = MongoClient(settings.MONGO_URI)
+            client.admin.command('ping')
             return True
-        except Exception:
+        except Exception as e:
             return False
 
-    @staticmethod
-    async def check_redis() -> bool:
-        """Check if Redis is available."""
+    async def check_redis(self):
         try:
-            redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
-            pong = await redis_client.ping()
-            await redis_client.close()
-            return pong
-        except Exception:
+            client = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, password=settings.REDIS_PASSWORD)
+            if await client.ping():
+                return True
+        except Exception as e:
             return False

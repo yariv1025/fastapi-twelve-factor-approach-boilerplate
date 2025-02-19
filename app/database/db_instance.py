@@ -4,7 +4,7 @@ from app.core.config import settings
 from motor.motor_asyncio import AsyncIOMotorClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
-db_type = os.getenv("DB_TYPE", "postgresql").lower()
+db_type = settings.DB_TYPE.lower()
 
 # PostgreSQL Connection
 pg_engine = create_async_engine(settings.POSTGRES_URL, echo=False, future=True)
@@ -35,7 +35,11 @@ async def get_redis_db():
 
 
 async def get_db():
-    """Generic database session handler based on environment variable"""
+    """
+    Database session generator (handler) that yields a database session
+    based on environment variable, and ensures that the database session
+    lifecycle is properly managed (e.g., automatically closing sessions after use).
+    """
     if db_type == "postgresql":
         async with PostgresSessionLocal() as session:
             yield session

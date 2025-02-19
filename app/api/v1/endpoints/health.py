@@ -1,16 +1,17 @@
+from http import HTTPStatus
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from motor.motor_asyncio import AsyncIOMotorDatabase
+
+from app.core.config import settings
 from app.services.health_service import HealthService
-from app.database.db_instance import get_pg_session, get_mongo_db
+from app.database.db_instance import get_db
 
 router = APIRouter()
+db_type = settings.DB_TYPE.lower()
 
 
 @router.get("/", tags=["Health Check"])
 async def health_status(
-        pg_session: AsyncSession = Depends(get_pg_session),
-        mongo_db: AsyncIOMotorDatabase = Depends(get_mongo_db),
+        db = Depends(get_db),
 ):
     """
     Health check endpoint that verifies:
@@ -20,17 +21,21 @@ async def health_status(
 
     Returns a JSON response with the health status.
     """
-    postgres_ok = await HealthService.check_postgres(pg_session)
-    mongo_ok = await HealthService.check_mongo(mongo_db)
-    redis_ok = await HealthService.check_redis()
+    health_service = HealthService(db)  # Explicitly passing dependency
+
+    if db_type == "postgresql":
+        db_ok = await health_service.check_postgres()
+    elif db_type == "mongodb":
+        db_ok = await health_service.check_mongo()
+    elif db_type == "redis":
+        db_ok = await health_service.check_redis()
+    else:
+        raise ValueError(f"Unsupported database type: {db_type}")
 
     health_data = {
-        "status": "healthy" if all([postgres_ok, mongo_ok, redis_ok]) else "unhealthy",
-        "databases": {
-            "postgres": "OK" if postgres_ok else "DOWN",
-            "mongodb": "OK" if mongo_ok else "DOWN",
-            "redis": "OK" if redis_ok else "DOWN",
-        },
+        "status": "healthy" if db_ok else "unhealthy",
+        "database": "OK" if db_ok else "DOWN",
     }
 
-    return health_data if all([postgres_ok, mongo_ok, redis_ok]) else (health_data, 503)
+    return (health_data, HTTPStatus.OK) if db_ok \
+        else (health_data, HTTPStatus.SERVICE_UNAVAILABLE)
