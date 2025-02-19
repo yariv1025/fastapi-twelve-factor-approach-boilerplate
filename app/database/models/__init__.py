@@ -1,0 +1,1 @@
+#  Models are represents how the scans table is structured in our database.
