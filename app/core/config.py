@@ -17,14 +17,35 @@ class Settings(BaseSettings):
     # Database settings
     DB_TYPE: str = os.getenv("DB_TYPE", "postgresql")  # Default to PostgreSQL if not set
 
+    # Postgres
     POSTGRES_URL: str = os.getenv("POSTGRES_URL")
+    POSTGRES_USER: str = os.getenv("POSTGRES_USER")
+    POSTGRES_DOMAIN: str = os.getenv("POSTGRES_DOMAIN")
+    POSTGRES_PORT: str = os.getenv("POSTGRES_PORT")
+    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD")
+    POSTGRES_DB_NAME: str = os.getenv("POSTGRES_DB_NAME")
+
+    # Mongo DB
+    MONGO_USER: str = os.getenv("MONGO_USER")
+    MONGO_PASSWORD: str = os.getenv("MONGO_PASSWORD")
+    MONGO_ADMIN_USER: str = os.getenv("MONGO_ADMIN_USER")
+    MONGO_ADMIN_PASSWORD: str = os.getenv("MONGO_ADMIN_PASSWORD")
+    MONGO_DOMAIN: str = os.getenv("MONGO_DOMAIN")
+    MONGO_PORT: str = os.getenv("MONGO_PORT")
     MONGODB_URL: str = os.getenv("MONGODB_URL")
     MONGO_DB_NAME: str = os.getenv("MONGO_DB_NAME")
 
     # Redis
+    REDIS_PASSWORD: str = os.getenv("REDIS_PASSWORD")
+    REDIS_DOMAIN: str = os.getenv("REDIS_DOMAIN")
+    REDIS_PROT: str = os.getenv("REDIS_PROT")
     REDIS_URL: str = os.getenv("REDIS_URL")
 
     # RabbitMQ
+    RABBITMQ_USERNAME: str = os.getenv("RABBITMQ_USERNAME")
+    RABBITMQ_PASSWORD: str = os.getenv("RABBITMQ_PASSWORD")
+    RABBITMQ_DOMAIN: str = os.getenv("RABBITMQ_DOMAIN")
+    RABBITMQ_PORT: str = os.getenv("RABBITMQ_PORT")
     RABBITMQ_URL: str = os.getenv("RABBITMQ_URL")
 
     # Auth

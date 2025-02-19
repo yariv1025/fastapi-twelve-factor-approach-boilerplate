@@ -1,1 +1,1 @@
-#  Models are represents how the scans table is structured in our database.
+#  Models are define how data is stored in the database (ORM models).

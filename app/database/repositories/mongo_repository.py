@@ -8,7 +8,6 @@ class MongoRepository(BaseRepository):
 
     def __init__(self, db: AsyncIOMotorDatabase, collection_name: str):
         self.collection = db[collection_name]
-        # self.collection = db.get(collection_name)
 
     async def create(self, data: dict) -> Any:
         result = await self.collection.insert_one(data)
