@@ -1,1 +1,1 @@
-# Schemas are for data validation
+# Schemas define how data is validated & transferred between API requests/responses (Pydantic models).
