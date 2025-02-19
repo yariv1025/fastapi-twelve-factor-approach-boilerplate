@@ -1,6 +1,7 @@
 import logging
 
 from http import HTTPStatus
+from typing import Union
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException, Security
 
@@ -35,16 +36,17 @@ def require_role(required_role: UserRole):
 
     async def role_dependency(user: dict = Depends(get_current_user)):
         if user.get("role") != required_role.value:
-            raise HTTPException(status_code=403, detail="Permission denied")
+            raise HTTPException(status_code=HTTPStatus.FORBIDDEN, detail="Permission denied")
         return user
 
     return role_dependency
 
 
 
-def get_repository(model, db):
+def get_repository(model, db) -> Union[PostgresRepository, MongoRepository]:
     """
-    Factory function to return the correct repository based on db_type.
+    Factory function that dynamically selects and returns the
+    appropriate repository class based on the configured database type.
 
     :param model: SQLAlchemy model (for PostgreSQL) or collection name (for MongoDB).
     :param db: Database session.
@@ -56,12 +58,13 @@ def get_repository(model, db):
         return MongoRepository(db=db, collection_name=model.__tablename__)
     else:
         logging.error(f"Unsupported database type: {settings.DB_TYPE}")
-        raise HTTPException(status_code=500, detail="Database type not supported")
+        raise HTTPException(status_code=HTTPStatus.INTERNAL_SERVER_ERROR, detail="Database type not supported")
 
 
-async def get_service(service_class, model, db=Depends(get_db)):
+async def get_service(service_class, model, db) -> Union[UserService, AuthService, ScanService]:
     """
     Factory function to return a service instance dynamically.
+    # TODO: is it a FACTORY?
 
     :param service_class: The service class (UserService, AuthService, etc.).
     :param model: The corresponding model (User, Scan, etc.).
@@ -73,11 +76,12 @@ async def get_service(service_class, model, db=Depends(get_db)):
 
 
 # Use the factory function for different services
-async def get_user_service(db=Depends(get_db)):
+async def get_user_service(db=Depends(get_db)) -> UserService:
     return await get_service(UserService, User, db)
 
-async def get_auth_service(db=Depends(get_db)):
+async def get_auth_service(db=Depends(get_db)) -> AuthService:
+    # TODO; check if Auth model should be here instead of User
     return await get_service(AuthService, User, db)
 
-async def get_scan_service(db=Depends(get_db)):
+async def get_scan_service(db=Depends(get_db)) -> ScanService:
     return await get_service(ScanService, Scan, db)
