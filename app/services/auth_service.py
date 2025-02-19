@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from fastapi import HTTPException
 from app.schemas.user import UserCreate, UserLogin
 from app.database.repositories.user_repository import UserRepository
@@ -5,13 +7,16 @@ from app.core.auth import verify_password, get_password_hash, create_access_toke
 
 
 class AuthService:
+    """
+    Service for authenticate the system's users
+    """
     def __init__(self, user_repository: UserRepository):
         self.user_repository = user_repository
 
     async def register_user(self, user_data: UserCreate):
         existing_user = await self.user_repository.get_by_email(user_data.email)
         if existing_user:
-            raise HTTPException(status_code=400, detail="Email already registered")
+            raise HTTPException(status_code=HTTPStatus.BAD_REQUEST, detail="Email already registered")
 
         hashed_password = get_password_hash(user_data.password)
         user_data.password = hashed_password
@@ -20,7 +25,7 @@ class AuthService:
     async def authenticate_user(self, user_data: UserLogin):
         user = await self.user_repository.get_by_email(user_data.email)
         if not user or not verify_password(user_data.password, user.hashed_password):
-            raise HTTPException(status_code=401, detail="Invalid credentials")
+            raise HTTPException(status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid credentials")
 
         # access_token = create_access_token({"sub": user.email}, timedelta(minutes=30))
         access_token = create_access_token({"sub": user.email, "role": user.role.value})
